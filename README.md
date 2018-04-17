@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/audit4j/audit4j-db.svg?branch=master)](https://travis-ci.org/audit4j/audit4j-db) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.audit4j/audit4j-db/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.audit4j/audit4j-db)
 
 Audit4j Database Handler.
 ==================
@@ -10,3 +9,9 @@ For more information please visit: http://audit4j.org
 For usage, api-guide and development please visit: http://audit4j.org/handler-db
 
 For contribute, please visit: http://audit4j.org/development
+
+
+About This Version
+==================
+
+This fork of Audit4J saves the elements column in JSON format!

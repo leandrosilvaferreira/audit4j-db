@@ -18,14 +18,19 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
 	<modelVersion>4.0.0</modelVersion>
+	
 	<groupId>org.audit4j</groupId>
 	<artifactId>audit4j-db</artifactId>
-	<packaging>jar</packaging>
+	<version>2.4.1B</version>
+
 	<name>Audit4j - Database Handler</name>
-	<version>2.4.1</version>
+	<packaging>jar</packaging>
+	
 	<url>http://audit4j.org</url>
 	<description>Audit4j - An open-source auditing framework, Database handler</description>
+	
 	<organization>
 		<name>Audit4j</name>
 		<url>http://audit4j.org</url>
@@ -54,22 +59,6 @@
 		</license>
 	</licenses>
 
-	<issueManagement>
-		<system>github</system>
-		<url>https://github.com/audit4j/audit4j-core/issues</url>
-	</issueManagement>
-
-	<scm>
-		<connection>scm:git:git@github.com:audit4j/audit4j-db.git</connection>
-		<developerConnection>scm:git:git@github.com:audit4j/audit4j-db.git</developerConnection>
-		<url>scm:git:git@github.com:audit4j/audit4j-db.git</url>
-		<tag>2.4.0</tag>
-	</scm>
-
-	<ciManagement>
-		<system>travis-ci</system>
-		<url>https://travis-ci.org/audit4j/audit4j-db</url>
-	</ciManagement>
 
 	<distributionManagement>
 		<repository>
@@ -141,8 +130,14 @@
 			<artifactId>guava</artifactId>
 			<version>${guava.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.2</version>
+		</dependency>
+
 	</dependencies>
-	
+
 	<build>
 		<plugins>
 			<plugin>
