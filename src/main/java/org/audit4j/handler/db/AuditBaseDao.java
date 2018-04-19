@@ -31,90 +31,97 @@ import org.audit4j.core.exception.HandlerException;
  */
 class AuditBaseDao {
 
-    /**
-     * Gets the connection.
-     *
-     * @return the connection
-     */
-    protected Connection getConnection() {
-        ConnectionFactory factory = ConnectionFactory.getInstance();
-        return factory.getConnection();
-    }
+	/**
+	 * Gets the connection.
+	 *
+	 * @return the connection
+	 */
+	protected Connection getConnection() {
 
-    /**
-     * Determine database type using database metadata product name.
-     *
-     * @return the string
-     * @throws HandlerException
-     *             the handler exception
-     */
-    protected String determineDatabaseType() throws HandlerException {
-        String dbName = null;
-        try (Connection conn = getConnection()) {
-            dbName = conn.getMetaData().getDatabaseProductName();
-        } catch (SQLException e) {
-            throw new HandlerException("Exception occured while getting DB Name",
-                    DatabaseAuditHandler.class, e);
-        }
-        return dbName;
-    }
+		final ConnectionFactory factory = ConnectionFactory.getInstance();
+		return factory.getConnection();
+	}
 
-    /**
-     * Checks if is oracle database.
-     *
-     * @return true, if is oracle database
-     * @throws HandlerException
-     *             the handler exception
-     */
-    protected boolean isOracleDatabase() throws HandlerException {
-        String dbName = determineDatabaseType();
-        if (dbName == null) {
-            return false;
-        }
-        return "Oracle".equalsIgnoreCase(dbName);
-    }
+	/**
+	 * Determine database type using database metadata product name.
+	 *
+	 * @return the string
+	 * @throws HandlerException
+	 *             the handler exception
+	 */
+	protected String determineDatabaseType() throws HandlerException {
 
-    /**
-     * Checks if is HSQL database.
-     *
-     * @return true, if is HSQL database
-     * @throws HandlerException
-     *             the handler exception
-     */
-    protected boolean isHSQLDatabase() throws HandlerException {
-        String dbName = determineDatabaseType();
-        if (dbName == null) {
-            return false;
-        }
-        return "HSQL Database Engine".equalsIgnoreCase(dbName);
-    }
+		String dbName = null;
+		try (Connection conn = this.getConnection()) {
+			dbName = conn.getMetaData().getDatabaseProductName();
+		}
+		catch (final SQLException e) {
+			throw new HandlerException("Exception occured while getting DB Name", DatabaseAuditHandler.class, e);
+		}
+		return dbName;
+	}
 
-    /**
-     * Checks if the database is MySQL.
-     *
-     * @return true, if is my sql database
-     * @throws HandlerException the handler exception
-     */
-    protected boolean isMySQLDatabase() throws HandlerException {
-        String dbName = determineDatabaseType();
-        if (dbName == null) {
-            return false;
-        }
-        return "MySQL".equalsIgnoreCase(dbName);
-    }
-    
-    /**
-     * Checks if is SQLServer database.
-     *
-     * @return true, if is sqlserver database
-     * @throws HandlerException
-     *             the handler exception
-     */
-    protected boolean isSQLServerDatabase() throws HandlerException {
-        String dbName = determineDatabaseType();
-        if (dbName == null) {
-            return false;
-        }
-        return "Microsoft SQL Server".equalsIgnoreCase(dbName);
-    }
+	/**
+	 * Checks if is oracle database.
+	 *
+	 * @return true, if is oracle database
+	 * @throws HandlerException
+	 *             the handler exception
+	 */
+	protected boolean isOracleDatabase() throws HandlerException {
+
+		final String dbName = this.determineDatabaseType();
+		if (dbName == null) {
+			return false;
+		}
+		return "Oracle".equalsIgnoreCase(dbName);
+	}
+
+	/**
+	 * Checks if is HSQL database.
+	 *
+	 * @return true, if is HSQL database
+	 * @throws HandlerException
+	 *             the handler exception
+	 */
+	protected boolean isHSQLDatabase() throws HandlerException {
+
+		final String dbName = this.determineDatabaseType();
+		if (dbName == null) {
+			return false;
+		}
+		return "HSQL Database Engine".equalsIgnoreCase(dbName);
+	}
+
+	/**
+	 * Checks if the database is MySQL.
+	 *
+	 * @return true, if is my sql database
+	 * @throws HandlerException
+	 *             the handler exception
+	 */
+	protected boolean isMySQLDatabase() throws HandlerException {
+
+		final String dbName = this.determineDatabaseType();
+		if (dbName == null) {
+			return false;
+		}
+		return "MySQL".equalsIgnoreCase(dbName);
+	}
+
+	/**
+	 * Checks if is SQLServer database.
+	 *
+	 * @return true, if is sqlserver database
+	 * @throws HandlerException
+	 *             the handler exception
+	 */
+	protected boolean isSQLServerDatabase() throws HandlerException {
+
+		final String dbName = this.determineDatabaseType();
+		if (dbName == null) {
+			return false;
+		}
+		return "Microsoft SQL Server".equalsIgnoreCase(dbName);
+	}
 }

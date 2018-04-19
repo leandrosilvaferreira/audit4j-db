@@ -18,6 +18,8 @@
 
 package org.audit4j.handler.db;
 
+import java.util.List;
+
 import org.audit4j.core.dto.AuditEvent;
 import org.audit4j.core.exception.HandlerException;
 
@@ -28,12 +30,17 @@ import org.audit4j.core.exception.HandlerException;
  */
 interface AuditLogDao {
 
-    /**
-     * Write event.
-     *
-     * @param event the event
-     * @return true, if successful
-     * @throws HandlerException the handler exception
-     */
-    boolean writeEvent(final AuditEvent event) throws HandlerException;
+	/**
+	 * Write event.
+	 *
+	 * @param event
+	 *            the event
+	 * @return true, if successful
+	 * @throws HandlerException
+	 *             the handler exception
+	 */
+	boolean writeEvent(final AuditEvent event) throws HandlerException;
+
+	List<AuditEvent> findAuditEventsByActor(String actor, Integer limit) throws HandlerException;
+
 }

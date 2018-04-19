@@ -20,16 +20,24 @@ package org.audit4j.handler.db;
 
 import static org.audit4j.handler.db.Utils.checkNotEmpty;
 
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.audit4j.core.dto.AuditEvent;
+import org.audit4j.core.dto.Field;
 import org.audit4j.core.exception.HandlerException;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import lombok.NonNull;
 
 /**
  * This class is used to create audit tables and submit audit events to JDBC supported data stores.
@@ -143,11 +151,28 @@ final class AuditLogDaoImpl extends AuditBaseDao implements AuditLogDao {
 			}
 			else if (this.isMySQLDatabase()) {
 				// Create table if MySQL database
-				query.append("create table if not exists ").append(tableNameWithSchema).append(" (").append("identifier VARCHAR(200) NOT NULL,").append("timestamp TIMESTAMP NOT NULL,")
-						.append("actor VARCHAR(200) NOT NULL,").append("origin VARCHAR(200),").append("action VARCHAR(200) NOT NULL,").append("elements TEXT").append(");");
+
+				//@formatter:off
+				query
+					.append("create table if not exists ")
+					.append(tableNameWithSchema)
+					.append(" (")
+					.append("identifier VARCHAR(200) NOT NULL,")
+					.append("timestamp TIMESTAMP NOT NULL,")
+					.append("actor VARCHAR(200) NOT NULL,")
+					.append("origin VARCHAR(200),")
+					.append("action VARCHAR(200) NOT NULL,")
+					.append("elements TEXT")
+					.append(");");
+
 				try (PreparedStatement statement = conn.prepareStatement(query.toString())) {
 					result = statement.execute();
 				}
+
+				this.createMysqlIndex("actor", "ASC");
+				this.createMysqlIndex("timestamp", "DESC");
+
+				//@formatter:on
 			}
 			else if (this.isSQLServerDatabase()) {
 				// Create table if SQLServer database
@@ -165,6 +190,150 @@ final class AuditLogDaoImpl extends AuditBaseDao implements AuditLogDao {
 				try (PreparedStatement statement = conn.prepareStatement(query.toString())) {
 					result = statement.execute();
 				}
+			}
+			return result;
+		}
+		catch (final SQLException e) {
+			throw new HandlerException("SQL Exception", DatabaseAuditHandler.class, e);
+		}
+	}
+
+	private boolean createMysqlIndex(@NonNull final String columnName, final String order) throws HandlerException {
+
+		try (Connection conn = this.getConnection()) {
+
+			final String schema = this.schemaName != null ? this.schemaName : conn.getSchema();
+			final String schemaAndTableName = (schema != null ? schema + "." : "") + this.tableName;
+			final String indexName = (schema != null ? schema + "_" : "") + this.tableName + "_" + columnName + "_IDX";
+
+			if (!this.existsMysqlIndex(indexName)) {
+
+				final StringBuilder createIndexQuery = new StringBuilder();
+				createIndexQuery.append("ALTER TABLE " + schemaAndTableName + " ADD INDEX `" + indexName + "` (`" + columnName + "` " + (order != null ? order : "ASC") + ")");
+
+				try (PreparedStatement statement = conn.prepareStatement(createIndexQuery.toString())) {
+					return statement.execute();
+				}
+			}
+		}
+		catch (final SQLException e) {
+			throw new HandlerException("SQL Exception", DatabaseAuditHandler.class, e);
+		}
+
+		return false;
+	}
+
+	private boolean existsMysqlIndex(final String indexName) throws HandlerException {
+
+		try (Connection conn = this.getConnection()) {
+
+			final String schema = this.schemaName != null ? this.schemaName : conn.getSchema();
+
+			final StringBuilder query = new StringBuilder();
+			query.append(" SELECT count(*) AS count FROM INFORMATION_SCHEMA.STATISTICS WHERE ");
+			query.append(" TABLE_NAME = ? AND INDEX_NAME = ? ");
+
+			if (schema != null) {
+				query.append(" AND TABLE_SCHEMA = ? ");
+			}
+
+			ResultSet rs = null;
+
+			try (PreparedStatement statement = conn.prepareStatement(query.toString())) {
+
+				statement.setString(1, this.tableName);
+				statement.setString(2, indexName);
+
+				if (schema != null) {
+					statement.setString(3, schema);
+				}
+
+				rs = statement.executeQuery();
+
+				while (rs.next()) {
+					return rs.getInt("count") > 0;
+				}
+			}
+			finally {
+				if (rs != null) {
+					rs.close();
+				}
+			}
+
+		}
+		catch (final SQLException e) {
+			throw new HandlerException("SQL Exception", DatabaseAuditHandler.class, e);
+		}
+
+		return false;
+	}
+
+	@Override
+	public List<AuditEvent> findAuditEventsByActor(@NonNull final String actor, final Integer limit) throws HandlerException {
+
+		final List<AuditEvent> result = new ArrayList<>();
+
+		try (Connection conn = this.getConnection()) {
+			final StringBuilder query = new StringBuilder();
+			final String tableNameWithSchema = (!StringUtils.isEmpty(this.schemaName)) ? (this.schemaName + "." + this.tableName) : this.tableName;
+
+			if (this.isOracleDatabase()) {
+				throw new UnsupportedOperationException("findAuditEventsByActor not implemented to Oracle");
+			}
+			else if (this.isHSQLDatabase()) {
+				throw new UnsupportedOperationException("findAuditEventsByActor not implemented to HSQLDB");
+			}
+			else if (this.isMySQLDatabase()) {
+				// Select auditevents from table if MySQL database
+
+				//@formatter:off
+				query
+				.append(" SELECT identifier, `timestamp`, actor, origin, `action`, elements FROM  ")
+				.append(tableNameWithSchema)
+				.append(" WHERE actor = ? ")
+				.append(" ORDER BY `timestamp` DESC ");
+
+				if(limit != null){
+					query.append(" LIMIT ?");
+				}
+				//@formatter:on
+
+				ResultSet rs = null;
+
+				try (PreparedStatement statement = conn.prepareStatement(query.toString())) {
+
+					statement.setString(1, actor);
+
+					if (limit != null) {
+						statement.setInt(2, limit);
+					}
+
+					rs = statement.executeQuery();
+
+					while (rs.next()) {
+
+						final Type listType = new TypeToken<ArrayList<Field>>() {
+						}.getType();
+						final List<Field> fields = new Gson().fromJson(rs.getString("elements"), listType);
+
+						final AuditEvent auditEvent = new AuditEvent(rs.getString("actor"), rs.getString("action"), rs.getString("origin"), fields.toArray(new Field[fields.size()]));
+						auditEvent.setUuid(Long.valueOf(rs.getString("identifier")));
+						auditEvent.setTimestamp(rs.getTimestamp("timestamp"));
+
+						result.add(auditEvent);
+					}
+				}
+				finally {
+					if (rs != null) {
+						rs.close();
+					}
+				}
+			}
+			else if (this.isSQLServerDatabase()) {
+				throw new UnsupportedOperationException("findAuditEventsByActor not implemented to SQL Server");
+			}
+			else {
+				throw new UnsupportedOperationException("findAuditEventsByActor not implemented to ?????");
 			}
 			return result;
 		}
