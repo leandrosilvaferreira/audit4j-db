@@ -14,4 +14,5 @@ For contribute, please visit: http://audit4j.org/development
 About This Version
 ==================
 
-This fork of Audit4J saves the elements column in JSON format!
+* This fork of Audit4J saves the elements column in JSON format!
+* This fork of Audit4J alow to search for audit events by actor!
