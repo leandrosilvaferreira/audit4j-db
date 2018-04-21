@@ -160,7 +160,7 @@ final class AuditLogDaoImpl extends AuditBaseDao implements AuditLogDao {
 					.append("identifier VARCHAR(200) NOT NULL,")
 					.append("timestamp TIMESTAMP NOT NULL,")
 					.append("actor VARCHAR(200) NOT NULL,")
-					.append("origin VARCHAR(200),")
+					.append("origin TEXT,")
 					.append("action VARCHAR(200) NOT NULL,")
 					.append("elements TEXT")
 					.append(");");
